@@ -44,26 +44,29 @@ end
 
 -- Generate obfuscated number expression
 local function obfuscateNumber(num)
-    local operations = {
-        function(n) 
-            local base = math.random(100000, 999999)
-            return tostring(base) .. "+" .. tostring(n - base)
-        end,
-        function(n)
-            local base = math.random(100000, 999999)
-            return tostring(base) .. "-" .. tostring(base - n)
-        end,
-        function(n)
-            local base = math.random(100000, 999999)
-            return tostring(base + n) .. "-" .. tostring(base)
-        end,
-        function(n)
-            local multiplier = math.random(2, 10)
-            return tostring(n * multiplier) .. "/" .. tostring(multiplier)
-        end
-    }
+    local choice = math.random(1, 4)
     
-    return operations[math.random(1, #operations)](num)
+    if choice == 1 then
+        -- Addition
+        local base = math.random(100000, 999999)
+        if num >= 0 then
+            return tostring(base) .. "+" .. tostring(num)
+        else
+            return tostring(base) .. "-" .. tostring(math.abs(num))
+        end
+    elseif choice == 2 then
+        -- Subtraction
+        local base = math.random(100000, 999999)
+        return tostring(base + num) .. "-" .. tostring(base)
+    elseif choice == 3 then
+        -- Another subtraction variant
+        local base = math.random(100000, 999999)
+        return tostring(base) .. "-" .. tostring(base - num)
+    else
+        -- Multiplication/Division
+        local multiplier = math.random(2, 10)
+        return tostring(num * multiplier) .. "/" .. tostring(multiplier)
+    end
 end
 
 -- Generate obfuscated assignment
