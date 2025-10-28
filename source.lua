@@ -167,7 +167,13 @@ end
 
 -- Module Export
 return function(source, CustomVarName, WaterMark)
+    local result
     task.spawn(function()
-        obfuscate(source, CustomVarName, WaterMark)
+        result = obfuscate(source, CustomVarName, WaterMark)
     end)
+    
+    -- Wait for the obfuscation to complete
+    task.wait(0.1)
+    
+    return result
 end
