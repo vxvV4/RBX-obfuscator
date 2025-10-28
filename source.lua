@@ -117,7 +117,8 @@ function obfuscate(source, VarName, WaterMark)
     local decryptFunc = "function(" .. varData .. "," .. varKey .. ") local " .. varResult .. "='' local " .. generateName(math.random(50, 99)) .. "=#" .. varKey .. " for " .. generateName(math.random(10, 49)) .. "=1,#" .. varData .. " do local " .. generateName(math.random(5, 9)) .. "=" .. varData .. "[" .. generateName(math.random(10, 49)) .. "]local " .. generateName(math.random(3, 4)) .. "=" .. varKey .. "[((" .. generateName(math.random(10, 49)) .. "-1)%" .. generateName(math.random(50, 99)) .. ")+1]" .. varResult .. "=" .. varResult .. "..string.char(" .. generateName(math.random(5, 9)) .. "~" .. generateName(math.random(3, 4)) .. ")end return " .. varResult .. " end"
     
     -- Proper XOR decrypt function builder
-    local realDecryptFunc = "function(" .. varData .. "," .. varKey .. ")local " .. varResult .. "=''for i=1,#" .. varData .. " do " .. varResult .. "=" .. varResult .. "..string.char(" .. varData .. "[i]~" .. varKey .. "[((i-1)%#" .. varKey .. ")+1])end return " .. varResult .. " end"
+    local iterVar = Variable .. generateName(math.random(1, 9))
+    local realDecryptFunc = "function(" .. varData .. "," .. varKey .. ")local " .. varResult .. "='' for " .. iterVar .. "=1,#" .. varData .. " do " .. varResult .. "=" .. varResult .. "..string.char(" .. varData .. "[" .. iterVar .. "]~" .. varKey .. "[((" .. iterVar .. "-1)%#" .. varKey .. ")+1])end return " .. varResult .. " end"
     
     -- Build obfuscated code (single line, very compact)
     local obfuscated = WM .. 
@@ -147,8 +148,9 @@ function obfuscate(source, VarName, WaterMark)
     secondDataArray = secondDataArray .. "}"
     
     -- Final wrapper with double XOR (super compact, no newlines)
+    local finalIterVar = Variable .. generateName(math.random(1, 9))
     local finalObfuscated = WM .. 
-        "return(function()local " .. finalVarKey .. "=" .. secondKeyArray .. " local " .. finalVarData .. "=" .. secondDataArray .. " local " .. finalVarFunc .. "=function(d,k)local r=''for i=1,#d do r=r..string.char(d[i]~k[((i-1)%#k)+1])end return r end return loadstring(" .. finalVarFunc .. "(" .. finalVarData .. "," .. finalVarKey .. "))()end)()"
+        "return(function()local " .. finalVarKey .. "=" .. secondKeyArray .. " local " .. finalVarData .. "=" .. secondDataArray .. " local " .. finalVarFunc .. "=function(d,k)local r='' for " .. finalIterVar .. "=1,#d do r=r..string.char(d[" .. finalIterVar .. "]~k[((" .. finalIterVar .. "-1)%#k)+1])end return r end return loadstring(" .. finalVarFunc .. "(" .. finalVarData .. "," .. finalVarKey .. "))()end)()"
     
     setclipboard(finalObfuscated)
     warn("Done! Obfuscated in " .. tostring(tick() - ticks) .. " seconds")
