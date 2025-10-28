@@ -1,7 +1,7 @@
 --[[
     Version: 2.0.0
     Last Update: 29 / 10 / 2025 | Day / Month / Year
-    Modernized obfuscator with improved name generation
+    Advanced obfuscator with XOR encryption and mangled names
 ]]--
 
 -- Utility Functions
@@ -20,17 +20,12 @@ local function shuffle(tbl)
     end
 end
 
--- Name Generator Configuration
-local MIN_CHARACTERS = 5
-local MAX_INITIAL_CHARACTERS = 10
-
-local offset = 0
-local VarDigits = chararray("Il1")
-local VarStartDigits = chararray("Il")
+-- Mangled Name Generator Configuration
+local VarDigits = chararray("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_")
+local VarStartDigits = chararray("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
 
 local function generateName(id)
     local name = ''
-    id = id + offset
     local d = id % #VarStartDigits
     id = (id - d) / #VarStartDigits
     name = name .. VarStartDigits[d + 1]
@@ -45,50 +40,34 @@ end
 local function prepareNameGenerator()
     shuffle(VarDigits)
     shuffle(VarStartDigits)
-    offset = math.random(3 ^ MIN_CHARACTERS, 3 ^ MAX_INITIAL_CHARACTERS)
 end
 
--- String to Binary Conversion
-local function StringToBinary(String)
-    local BinaryString = {}
-    for i, Character in ipairs(String:split('')) do
-        local Binary = ""
-        local Byte = Character:byte()
-        while Byte > 0 do
-            Binary = tostring(Byte % 2) .. Binary
-            Byte = math.modf(Byte / 2)
-        end
-        table.insert(BinaryString, string.format("%.8d", Binary))
+-- XOR Encryption
+local function xorEncrypt(str, key)
+    local encrypted = {}
+    local keyLen = #key
+    for i = 1, #str do
+        local charCode = string.byte(str, i)
+        local keyChar = string.byte(key, ((i - 1) % keyLen) + 1)
+        table.insert(encrypted, charCode ~ keyChar)
     end
-    return table.concat(BinaryString, " ")
+    return encrypted
 end
 
--- Add Binary Junk Variables
-local function addBinaryJunk(number, varPrefix, s)
-    local topics = {
-        "Deobfuscate?",
-        "Hello World!",
-        "Touch some grass",
-        "New update when?",
-        "Free obfuscator!",
-        "Modernized v2.0",
-    }
-    
-    for i = 1, tonumber(number) do
-        local varName = generateName(math.random(1000, 9999))
-        local topic = topics[math.random(1, #topics)]
-        local str = "local " .. varPrefix .. varName .. ' = "' .. StringToBinary(topic) .. '"; '
-        s = s .. str
+-- Generate random XOR key
+local function generateXORKey(length)
+    local key = ""
+    for i = 1, length do
+        key = key .. string.char(math.random(33, 126))
     end
-    
-    return tostring(s)
+    return key
 end
 
 -- Main Obfuscation Function
 function obfuscate(source, VarName, WaterMark)
     warn("Started obfuscation...")
     
-    local Variable = VarName or "Taurus_"
+    local Variable = VarName or ""
     local WM
     
     if source == nil then
@@ -100,80 +79,85 @@ function obfuscate(source, VarName, WaterMark)
     -- Prepare name generator
     prepareNameGenerator()
     
-    -- Watermark
+    -- Generate XOR key
+    local xorKey = generateXORKey(math.random(16, 32))
+    local encryptedBytes = xorEncrypt(source, xorKey)
+    
+    -- Watermark (compact)
     if typeof(WaterMark) == "string" and WaterMark ~= nil then
-        WM = "    " .. tostring(WaterMark) .. " | Modernized Obfuscator v2.0"
+        WM = "--[[ " .. tostring(WaterMark) .. " ]]--"
     else
-        WM = "    WaterMark | Modernized Obfuscator v2.0"
-    end
-    WM = "--[[\n" .. tostring(WM) .. "\n]]--\n\n"
-    
-    -- Generate unique variable names
-    local varTableByte = Variable .. generateName(1)
-    local varLoadstring = Variable .. generateName(2)
-    local varTroll = Variable .. generateName(3)
-    
-    -- Convert source to byte array
-    local SourceByte = ""
-    for i = 1, string.len(source) do
-        SourceByte = SourceByte .. '"\\'.. string.byte(source, i) .. '", '
+        WM = "--[[ Protected ]]--"
     end
     
-    -- Create troll function with junk
-    local trollFunc = "function() " .. addBinaryJunk(math.random(20, 35), Variable, "") .. " end"
-    local trollVar = "local " .. varTroll .. " = " .. trollFunc
+    -- Generate unique variable names with mangled characters
+    local varKey = Variable .. generateName(math.random(100, 999))
+    local varData = Variable .. generateName(math.random(1000, 9999))
+    local varDecrypt = Variable .. generateName(math.random(10000, 99999))
+    local varLoader = Variable .. generateName(math.random(100000, 999999))
+    local varResult = Variable .. generateName(math.random(1000000, 9999999))
     
-    -- Table with byte array
-    local TableByte = "local " .. varTableByte .. " = {" .. SourceByte .. "}"
-    
-    -- Loadstring loader
-    local Loadstring = 'local ' .. varLoadstring .. ' = loadstring(table.concat({"\\114", "\\101", "\\116", "\\117", "\\114", "\\110", "\\32", "\\102", "\\117", "\\110", "\\99", "\\116", "\\105", "\\111", "\\110", "\\40", "\\98", "\\121", "\\116", "\\101", "\\41", "\\10", "\\32", "\\32", "\\32", "\\32", "\\105", "\\102", "\\32", "\\116", "\\121", "\\112", "\\101", "\\111", "\\102", "\\40", "\\98", "\\121", "\\116", "\\101", "\\41", "\\32", "\\61", "\\61", "\\32", "\\34", "\\116", "\\97", "\\98", "\\108", "\\101", "\\34", "\\32", "\\116", "\\104", "\\101", "\\110", "\\10", "\\32", "\\32", "\\32", "\\32", "\\32", "\\32", "\\32", "\\32", "\\108", "\\111", "\\97", "\\100", "\\115", "\\116", "\\114", "\\105", "\\110", "\\103", "\\40", "\\116", "\\97", "\\98", "\\108", "\\101", "\\46", "\\99", "\\111", "\\110", "\\99", "\\97", "\\116", "\\40", "\\98", "\\121", "\\116", "\\101", "\\41", "\\41", "\\40", "\\41", "\\10", "\\32", "\\32", "\\32", "\\32", "\\101", "\\108", "\\115", "\\101", "\\10", "\\32", "\\32", "\\32", "\\32", "\\32", "\\32", "\\32", "\\32", "\\98", "\\121", "\\116", "\\101", "\\32", "\\61", "\\32", "\\123", "\\98", "\\121", "\\116", "\\101", "\\125", "\\10", "\\32", "\\32", "\\32", "\\32", "\\32", "\\32", "\\32", "\\32", "\\108", "\\111", "\\97", "\\100", "\\115", "\\116", "\\114", "\\105", "\\110", "\\103", "\\40", "\\116", "\\97", "\\98", "\\108", "\\101", "\\46", "\\99", "\\111", "\\110", "\\99", "\\97", "\\116", "\\40", "\\98", "\\121", "\\116", "\\101", "\\41", "\\41", "\\40", "\\41", "\\10", "\\32", "\\32", "\\32", "\\32", "\\101", "\\110", "\\100", "\\10", "\\101", "\\110", "\\100", "\\10",}))()'
-    
-    -- Generate fake code blocks
-    local function generateFakeCode(count)
-        local fakes = {}
-        for i = 1, count do
-            local fakeVar = Variable .. generateName(math.random(5000, 9999))
-            local fakeContent = "return " .. generateName(math.random(10000, 99999))
-            local byte = ""
-            for x = 1, string.len(fakeContent) do
-                byte = byte .. '"\\'.. string.byte(fakeContent, x) .. '", '
-            end
-            local fake = "local " .. fakeVar .. " = {" .. byte .. "}; local " .. fakeVar .. " = " .. varLoadstring .. "(" .. fakeVar .. "); "
-            table.insert(fakes, fake)
-        end
-        return table.concat(fakes, "")
+    -- Build XOR key array (compact)
+    local keyArray = "{"
+    for i = 1, #xorKey do
+        keyArray = keyArray .. string.byte(xorKey, i)
+        if i < #xorKey then keyArray = keyArray .. "," end
     end
+    keyArray = keyArray .. "}"
     
-    -- Final execution variable
-    local finalVar = Variable .. generateName(9999)
+    -- Build encrypted data array (compact)
+    local dataArray = "{"
+    for i, byte in ipairs(encryptedBytes) do
+        dataArray = dataArray .. byte
+        if i < #encryptedBytes then dataArray = dataArray .. "," end
+    end
+    dataArray = dataArray .. "}"
     
-    -- Build obfuscated code with wrapper
+    -- XOR Decryption function (compact, no newlines)
+    local decryptFunc = "function(" .. varData .. "," .. varKey .. ") local " .. varResult .. "='' local " .. generateName(math.random(50, 99)) .. "=#" .. varKey .. " for " .. generateName(math.random(10, 49)) .. "=1,#" .. varData .. " do local " .. generateName(math.random(5, 9)) .. "=" .. varData .. "[" .. generateName(math.random(10, 49)) .. "]local " .. generateName(math.random(3, 4)) .. "=" .. varKey .. "[((" .. generateName(math.random(10, 49)) .. "-1)%" .. generateName(math.random(50, 99)) .. ")+1]" .. varResult .. "=" .. varResult .. "..string.char(" .. generateName(math.random(5, 9)) .. "~" .. generateName(math.random(3, 4)) .. ")end return " .. varResult .. " end"
+    
+    -- Proper XOR decrypt function builder
+    local realDecryptFunc = "function(" .. varData .. "," .. varKey .. ")local " .. varResult .. "=''for i=1,#" .. varData .. " do " .. varResult .. "=" .. varResult .. "..string.char(" .. varData .. "[i]~" .. varKey .. "[((i-1)%#" .. varKey .. ")+1])end return " .. varResult .. " end"
+    
+    -- Build obfuscated code (single line, very compact)
     local obfuscated = WM .. 
-        "return (function(...)\n" ..
-        trollVar .. "; " ..
-        Loadstring .. "; " ..
-        generateFakeCode(math.random(2, 4)) ..
-        TableByte .. "; " ..
-        "local " .. finalVar .. " = " .. varLoadstring .. "(" .. varTableByte .. "); " ..
-        generateFakeCode(math.random(2, 3)) ..
-        "\nend)(...)"
+        "return(function()local " .. varKey .. "=" .. keyArray .. " local " .. varData .. "=" .. dataArray .. " local " .. varDecrypt .. "=" .. realDecryptFunc .. " local " .. varLoader .. "=" .. varDecrypt .. "(" .. varData .. "," .. varKey .. ")return loadstring(" .. varLoader .. ")()end)()"
     
-    setclipboard(obfuscated)
+    -- Make it even longer by adding encoded layers
+    local finalVarKey = Variable .. generateName(math.random(50000, 99999))
+    local finalVarData = Variable .. generateName(math.random(100000, 999999))
+    local finalVarFunc = Variable .. generateName(math.random(200000, 999999))
+    
+    -- Double XOR encryption for extra security
+    local secondKey = generateXORKey(math.random(20, 40))
+    local secondEncrypted = xorEncrypt(obfuscated, secondKey)
+    
+    local secondKeyArray = "{"
+    for i = 1, #secondKey do
+        secondKeyArray = secondKeyArray .. string.byte(secondKey, i)
+        if i < #secondKey then secondKeyArray = secondKeyArray .. "," end
+    end
+    secondKeyArray = secondKeyArray .. "}"
+    
+    local secondDataArray = "{"
+    for i, byte in ipairs(secondEncrypted) do
+        secondDataArray = secondDataArray .. byte
+        if i < #secondEncrypted then secondDataArray = secondDataArray .. "," end
+    end
+    secondDataArray = secondDataArray .. "}"
+    
+    -- Final wrapper with double XOR (super compact, no newlines)
+    local finalObfuscated = WM .. 
+        "return(function()local " .. finalVarKey .. "=" .. secondKeyArray .. " local " .. finalVarData .. "=" .. secondDataArray .. " local " .. finalVarFunc .. "=function(d,k)local r=''for i=1,#d do r=r..string.char(d[i]~k[((i-1)%#k)+1])end return r end return loadstring(" .. finalVarFunc .. "(" .. finalVarData .. "," .. finalVarKey .. "))()end)()"
+    
+    setclipboard(finalObfuscated)
     warn("Done! Obfuscated in " .. tostring(tick() - ticks) .. " seconds")
+    warn("Output length: " .. #finalObfuscated .. " characters")
     
-    return obfuscated
+    return finalObfuscated
 end
 
 -- Module Export
 return function(source, CustomVarName, WaterMark)
-    local result
-    task.spawn(function()
-        result = obfuscate(source, CustomVarName, WaterMark)
-    end)
-    
-    -- Wait for the obfuscation to complete
-    task.wait(0.1)
-    
-    return result
+    return obfuscate(source, CustomVarName, WaterMark)
 end
