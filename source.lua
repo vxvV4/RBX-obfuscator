@@ -175,7 +175,7 @@ function obfuscate(source, VarName, WaterMark)
     
     -- Build obfuscated code with wrapper and mangled shuffled code
     local obfuscated = WM .. 
-        "return (function(...)" ..
+        "return (function(...) " ..
         generateMangledCode(math.random(10, 20), Variable) ..
         trollVar .. " " ..
         generateMangledCode(math.random(5, 10), Variable) ..
@@ -185,11 +185,11 @@ function obfuscate(source, VarName, WaterMark)
         generateMangledCode(math.random(10, 15), Variable) ..
         TableByte .. " " ..
         generateMangledCode(math.random(5, 10), Variable) ..
-        "local " .. finalVar .. " = " .. varLoadstring .. "(" .. varTableByte .. ") " ..
+        "local " .. finalVar .. "=" .. varLoadstring .. "(" .. varTableByte .. ") " ..
         generateMangledCode(math.random(10, 20), Variable) ..
         generateFakeCode(math.random(2, 3)) ..
         generateMangledCode(math.random(15, 25), Variable) ..
-        "end)(...)"
+        " end)(...)"
     
     setclipboard(obfuscated)
     warn("Done! Obfuscated in " .. tostring(tick() - ticks) .. " seconds")
