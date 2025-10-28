@@ -42,7 +42,38 @@ local function prepareNameGenerator()
     shuffle(VarStartDigits)
 end
 
--- String to Binary Conversion
+-- Generate obfuscated number expression
+local function obfuscateNumber(num)
+    local operations = {
+        function(n) 
+            local base = math.random(100000, 999999)
+            return tostring(base) .. "+" .. tostring(n - base)
+        end,
+        function(n)
+            local base = math.random(100000, 999999)
+            return tostring(base) .. "-" .. tostring(base - n)
+        end,
+        function(n)
+            local base = math.random(100000, 999999)
+            return tostring(base + n) .. "-" .. tostring(base)
+        end,
+        function(n)
+            local multiplier = math.random(2, 10)
+            return tostring(n * multiplier) .. "/" .. tostring(multiplier)
+        end
+    }
+    
+    return operations[math.random(1, #operations)](num)
+end
+
+-- Generate obfuscated assignment
+local function obfuscateAssignment(varName, value)
+    if type(value) == "number" then
+        return varName .. "=" .. obfuscateNumber(value)
+    else
+        return varName .. "=" .. tostring(value)
+    end
+end
 local function StringToBinary(String)
     local BinaryString = {}
     for i, Character in ipairs(String:split('')) do
@@ -114,7 +145,7 @@ function obfuscate(source, VarName, WaterMark)
     end
     
     -- Create troll function with junk
-    local trollFunc = "function() " .. addBinaryJunk(math.random(20, 35), Variable, "") .. " end"
+    local trollFunc = "function() " .. generateMangledCode(math.random(30, 50), Variable) .. addBinaryJunk(math.random(20, 35), Variable, "") .. " end"
     local trollVar = "local " .. varTroll .. " = " .. trollFunc
     
     -- Table with byte array
@@ -142,16 +173,23 @@ function obfuscate(source, VarName, WaterMark)
     -- Final execution variable
     local finalVar = Variable .. generateName(9999)
     
-    -- Build obfuscated code with wrapper
+    -- Build obfuscated code with wrapper and mangled shuffled code
     local obfuscated = WM .. 
-        "return (function(...)\n" ..
-        trollVar .. "; " ..
-        Loadstring .. "; " ..
+        "return (function(...)" ..
+        generateMangledCode(math.random(10, 20), Variable) ..
+        trollVar .. " " ..
+        generateMangledCode(math.random(5, 10), Variable) ..
+        Loadstring .. " " ..
+        generateMangledCode(math.random(8, 15), Variable) ..
         generateFakeCode(math.random(2, 4)) ..
-        TableByte .. "; " ..
-        "local " .. finalVar .. " = " .. varLoadstring .. "(" .. varTableByte .. "); " ..
+        generateMangledCode(math.random(10, 15), Variable) ..
+        TableByte .. " " ..
+        generateMangledCode(math.random(5, 10), Variable) ..
+        "local " .. finalVar .. " = " .. varLoadstring .. "(" .. varTableByte .. ") " ..
+        generateMangledCode(math.random(10, 20), Variable) ..
         generateFakeCode(math.random(2, 3)) ..
-        "\nend)(...)"
+        generateMangledCode(math.random(15, 25), Variable) ..
+        "end)(...)"
     
     setclipboard(obfuscated)
     warn("Done! Obfuscated in " .. tostring(tick() - ticks) .. " seconds")
